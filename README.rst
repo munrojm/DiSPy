@@ -9,9 +9,7 @@ Prerequisites and Compilation
 
 DiSPy is able to run with Python2 or Python3 and requires *numpy*, *spglib* and the *atomic simulation environment (ASE)*. It can be manully installed by typing:
 
-``
-python setup.py install
-``
+``python setup.py install``
 
 Note that a fortran compiler is required. Testing has been done with *gfortran* only. 
 
