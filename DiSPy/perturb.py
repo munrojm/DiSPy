@@ -178,12 +178,6 @@ def gen_perturb(path,irreps,iv):
     # -- Generate matrix showing atom mapping for each operations
     a_map = gen_atom_map(DG,images,numUstar,basis,iv)
 
-    #for i in range(0,len(DG[0])):
-     #  for j in range(1,iv.numIm-1):
-      #     for k in range(0,iv.numAtoms):
-       #        if sum(a_map[i][j][k][:]) == 0:
-        #           print ("*************Atom matching error!!!!")
-
 
     # -- Generate and apply modes for an irrep of arbitrary dimension
     pt = np.zeros((iv.numIm,iv.numAtoms,3))

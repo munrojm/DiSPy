@@ -1,7 +1,7 @@
 import numpy as np
 import DiSPy.irreps as irr
 
-
+# -- Function print possible irreps for a given DG
 def print_irreps(iso_sg, iv):
     outputfile = open(iv.image_dir + "/../results/output.out", "a")
 
@@ -15,6 +15,7 @@ def print_irreps(iso_sg, iv):
             outputfile.write("Irrep #" + line[1:7].strip() + ": " + line[24:32].strip()+'\n')
     PIR.close()
 
+# -- Function to obtain the irrep. matrices for a DG and irrep.
 def get_irreps(path, iv):
 
     DG_std = path.get_DG_std()

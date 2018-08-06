@@ -4,6 +4,7 @@ import os
 import numpy as np
 import time
 
+# -- Init object holds calculation parameters.
 class in_var():
 
     def __init__(self, input_dir):

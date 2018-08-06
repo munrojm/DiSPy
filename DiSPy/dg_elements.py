@@ -3,7 +3,7 @@ import numpy as np
 from DiSPy.vec_util import *
 from DiSPy.op_id_utils import *
 
-
+## -- Get the elements of the distortion group
 def get_DG(path,iv):
 
     images = path.get_images()

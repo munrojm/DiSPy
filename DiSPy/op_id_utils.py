@@ -54,7 +54,7 @@ def vectorID(vec, gentol):
     vectext = vectext.strip()
     return isInt, vec, vectext
 
-
+# -- Function to identify a symmetry operation
 def operationAttributes(rot, tran, gentol):
     det = np.linalg.det(rot)
     if abs(det - 1) < gentol:

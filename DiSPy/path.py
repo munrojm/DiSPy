@@ -1,6 +1,6 @@
 import numpy as np
 
-
+# -- Path object and its attributes
 class make_path:
     def __init__(self,num_im):
         self.images = [None]*num_im

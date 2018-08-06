@@ -2,6 +2,7 @@ import os
 from ase.io import read, write
 import time
 
+# -- Output function
 def o_images(i_path,p_path,iv):
 
     images = i_path.get_images()
