@@ -1,0 +1,107 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module irreps ! in 
+    interface  ! in :irreps
+        subroutine pir_data_read ! in :irreps:pir_dat_module.f
+            use pir_data_module
+        end subroutine pir_data_read
+        subroutine pir_data_constant(choice,n,x) ! in :irreps:pir_dat_module.f
+            integer :: choice
+            integer*1 :: n
+            double precision :: x
+        end subroutine pir_data_constant
+        subroutine pir_data_write ! in :irreps:pir_dat_module.f
+            use pir_data_module
+        end subroutine pir_data_write
+        subroutine pir_data_unpack_operatormatrix(irnumber,opnumber,operatormatrix_out) ! in :irreps:pir_dat_module.f
+            use pir_data_module
+            integer :: irnumber
+            integer :: opnumber
+            integer dimension(4,4) :: operatormatrix_out
+        end subroutine pir_data_unpack_operatormatrix
+        subroutine pir_data_unpack_irmatrix_pointoperator(irnumber,opnumber,irmatrix_out,nr) ! in :irreps:pir_dat_module.f
+            use pir_data_module
+            integer :: irnumber
+            integer :: opnumber
+            double precision dimension(nr,nr) :: irmatrix_out
+            integer, optional,check(shape(irmatrix_out,0)==nr),depend(irmatrix_out) :: nr=shape(irmatrix_out,0)
+        end subroutine pir_data_unpack_irmatrix_pointoperator
+        subroutine pir_data_get_irmatrix_translation(irnumber,kvectorparameter,tvector,irmatrix_out,nr) ! in :irreps:pir_dat_module.f
+            use pir_data_module
+            integer :: irnumber
+            double precision dimension(3) :: kvectorparameter
+            integer dimension(4) :: tvector
+            double precision dimension(nr,nr) :: irmatrix_out
+            integer, optional,check(shape(irmatrix_out,0)==nr),depend(irmatrix_out) :: nr=shape(irmatrix_out,0)
+        end subroutine pir_data_get_irmatrix_translation
+        subroutine pir_data_get_irmatrix(irnumber,kvectorparameter,operatormatrix_in,irmatrix_out,nr) ! in :irreps:pir_dat_module.f
+            use pir_data_module
+            integer :: irnumber
+            double precision dimension(3) :: kvectorparameter
+            integer dimension(4,4) :: operatormatrix_in
+            double precision dimension(nr,nr), intent(in,out) :: irmatrix_out
+            integer, optional,check(shape(irmatrix_out,0)==nr),depend(irmatrix_out) :: nr=shape(irmatrix_out,0)
+        end subroutine pir_data_get_irmatrix
+        subroutine pir_data_test_multiplication_table(irnumber) ! in :irreps:pir_dat_module.f
+            use pir_data_module
+            integer :: irnumber
+        end subroutine pir_data_test_multiplication_table
+        subroutine pir_data_get_transform2complex(irnumber,smat,smatinv,nr) ! in :irreps:pir_dat_module.f
+            use pir_data_module
+            integer :: irnumber
+            complex*16 dimension(nr,nr) :: smat
+            complex*16 dimension(nr,nr),depend(nr,nr) :: smatinv
+            integer, optional,check(shape(smat,0)==nr),depend(smat) :: nr=shape(smat,0)
+        end subroutine pir_data_get_transform2complex
+        subroutine pir_data_vadd(nv1,nv2,nv3) ! in :irreps:pir_dat_module.f
+            integer dimension(4) :: nv1
+            integer dimension(4) :: nv2
+            integer dimension(4) :: nv3
+        end subroutine pir_data_vadd
+        subroutine pir_data_vsub(nv1,nv2,nv3) ! in :irreps:pir_dat_module.f
+            integer dimension(4) :: nv1
+            integer dimension(4) :: nv2
+            integer dimension(4) :: nv3
+        end subroutine pir_data_vsub
+        subroutine pir_data_vmlt(mat,nv1,nv2) ! in :irreps:pir_dat_module.f
+            integer dimension(3,3) :: mat
+            integer dimension(4) :: nv1
+            integer dimension(4) :: nv2
+        end subroutine pir_data_vmlt
+        subroutine pir_data_opmlt(op1,op2,op3) ! in :irreps:pir_dat_module.f
+            integer dimension(4,4) :: op1
+            integer dimension(4,4) :: op2
+            integer dimension(4,4) :: op3
+        end subroutine pir_data_opmlt
+        subroutine pir_data_dmatmlt(x1,x2,x3,nrow1,ncol1,ncol2,nr1,nr2,nr3) ! in :irreps:pir_dat_module.f
+            double precision dimension(nr1,ncol1) :: x1
+            double precision dimension(nr2,ncol2) :: x2
+            double precision dimension(nr3,ncol2),depend(ncol2) :: x3
+            integer :: nrow1
+            integer, optional,check(shape(x1,1)==ncol1),depend(x1) :: ncol1=shape(x1,1)
+            integer, optional,check(shape(x2,1)==ncol2),depend(x2) :: ncol2=shape(x2,1)
+            integer, optional,check(shape(x1,0)==nr1),depend(x1) :: nr1=shape(x1,0)
+            integer, optional,check(shape(x2,0)==nr2),depend(x2) :: nr2=shape(x2,0)
+            integer, optional,check(shape(x3,0)==nr3),depend(x3) :: nr3=shape(x3,0)
+        end subroutine pir_data_dmatmlt
+        subroutine pir_data_zmatmlt(x1,x2,x3,nrow1,ncol1,ncol2,nr1,nr2,nr3) ! in :irreps:pir_dat_module.f
+            complex*16 dimension(nr1,ncol1) :: x1
+            complex*16 dimension(nr2,ncol2) :: x2
+            complex*16 dimension(nr3,ncol2),depend(ncol2) :: x3
+            integer :: nrow1
+            integer, optional,check(shape(x1,1)==ncol1),depend(x1) :: ncol1=shape(x1,1)
+            integer, optional,check(shape(x2,1)==ncol2),depend(x2) :: ncol2=shape(x2,1)
+            integer, optional,check(shape(x1,0)==nr1),depend(x1) :: nr1=shape(x1,0)
+            integer, optional,check(shape(x2,0)==nr2),depend(x2) :: nr2=shape(x2,0)
+            integer, optional,check(shape(x3,0)==nr3),depend(x3) :: nr3=shape(x3,0)
+        end subroutine pir_data_zmatmlt
+        subroutine pir_data_factor(n,numbers) ! in :irreps:pir_dat_module.f
+            integer :: n
+            integer dimension(100000) :: numbers
+        end subroutine pir_data_factor
+    end interface 
+end python module irreps
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/
