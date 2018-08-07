@@ -17,9 +17,9 @@ Note that a fortran compiler is required. Testing has been done with *gfortran* 
 References
 ==========
 
-[1] J.M. Munro et. al. *Discovering minimum energy pathways via distortion symmetry groups*. Phys. Rev. B (2018).
+[1] J.M. Munro et. al. *Discovering minimum energy pathways via distortion symmetry groups*. Phys. Rev. B. 98, 085107 (2018).
 
-[2] B.K. VanLeeuwen & V. Gopalan. *The antisymmetry of distortions*. Nat. Commun. (2015).
+[2] B.K. VanLeeuwen & V. Gopalan. *The antisymmetry of distortions*. Nat. Commun. 6, 8818 (2015).
 
 
 
