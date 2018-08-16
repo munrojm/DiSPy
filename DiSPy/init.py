@@ -279,7 +279,7 @@ class in_var():
  |____/|_|____/|_|    \__, |
                       |___/ 
 """)
-        outputfile.write("\nDiSPy v0.1.0 run started on " + time.strftime("%c") + "\n\n")
+        outputfile.write("\nDiSPy v0.1.1 run started on " + time.strftime("%c") + "\n\n")
         outputfile.write("This code uses the tabulation of irreducible representations \nof the crystallographic space groups by H.T. Stokes and coworkers:\n\n")
         outputfile.write("\"H.T. Stokes et. al., Acta Cryst. A. 69, 388-395 (2013).\"\n\n")
         outputfile.write("===================================================================\n")
@@ -293,7 +293,7 @@ class in_var():
  |____/|_|____/|_|    \__, |
                       |___/ 
 """)
-        print("\nDiSPy v0.1.0 run started on " + time.strftime("%c") + "\n")
+        print("\nDiSPy v0.1.1 run started on " + time.strftime("%c") + "\n")
         print("This code uses the tabulation of irreducible representations \nof the crystallographic space groups by H.T. Stokes and coworkers:\n")
         print("\"H.T. Stokes et. al., Acta Cryst. A. 69, 388-395 (2013).\"\n")
         print("===================================================================")

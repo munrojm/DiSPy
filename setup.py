@@ -9,10 +9,12 @@ extension_irr = Extension(
 
 setup(
     name='DiSPy',
-    version='0.1.0',
+    version='0.1.1',
     author='Jason M. Munro',
     author_email='munrojm@psu.edu',
     packages=['DiSPy'],
+    package_dir={'DiSPy': 'DiSPy'},
+    package_data={'DiSPy': ['SPG_dict.txt']},
     scripts=['bin/dispy'],
     license='LICENSE.txt',
     description='Utility to apply the distortion symmetry method.',

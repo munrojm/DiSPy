@@ -3,9 +3,9 @@ import argparse
 import numpy as np
 
 from DiSPy import init, path, dg_elements,     \
-                  dg_elements_std, iso_sg,     \
+                  dg_elements_std,     \
                   irr_mat, perturb, vec_util, \
-                  op_id_utils, output
+                  op_id_utils, output, dist_name
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input_file")
@@ -31,9 +31,10 @@ op_id_utils.groupBB(in_path,init_vars)
 # -- Obtain elements of the DG (std. basis)
 dg_elements_std.get_DG_std(in_path,init_vars)
 
-# -- Obtain isomorphic space group (seg. faults
+# -- Obtain name of distortion group (seg. faults
 # at this point indicate tol. value is off)
-iso_sg_name = iso_sg.get_iso(in_path,init_vars)
+
+iso_sg_name = dist_name.get_dist_name(in_path,init_vars)
 
 # -- Print possible irreps from the listing of Stokes et al.
 irr_mat.print_irreps(iso_sg_name, init_vars)
@@ -57,9 +58,9 @@ if init_vars.perturb:
     # -- Obtain elements of the NEW DG (std. Basis)
     dg_elements_std.get_DG_std(p_path,init_vars)
 
-    # -- Obtain NEW isomorphic space group (seg. faults
+    # -- Obtain NEW distortion group name (seg. faults
     # at this point indicate tol. value is off)
-    iso_sg.get_iso(p_path,init_vars)
+    dist_name.get_dist_name(p_path,init_vars)
 
     # -- Output images and generate distortion movie files
     output.o_images(in_path,p_path,init_vars)

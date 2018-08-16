@@ -1,1 +1,2 @@
 v0.1.0, 07/30/2018 -- Initial release.
+v0.1.1, 08/16/2018 -- DG name is now outputted in full.
