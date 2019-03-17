@@ -46,11 +46,14 @@ def print_ds_name(pos_print,iso_sg_name,iv):
     outputfile = open(iv.image_dir + "/../results/output.out", "a")
     final_name = str(iso_sg_name)
 
-    for i in list(set(pos_print)):
+    p_count = 0
+
+    for i in sorted(list(set(pos_print))):
         if i == "e":
             final_name = final_name+"*"
         else:
-            final_name = final_name[0:1+int(i)]+"*"+final_name[1+int(i):]
+            final_name = final_name[0:1+(int(i)+int(p_count))]+"*"+final_name[1+(int(i)+int(p_count)):]
+            p_count += 1
 
     print ("\n-------\n------- Distortion group:\n-------\n")
     print (final_name)
