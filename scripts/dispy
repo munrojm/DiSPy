@@ -1,0 +1,73 @@
+#!/usr/bin/env python
+import argparse
+import numpy as np
+
+from DiSPy.core.io import IO
+from DiSPy.core.path import Path
+from DiSPy.core.irreps import IrrepTools
+
+from DiSPy.bilbao import groupBB
+from DiSPy.dg_elements import get_DG, get_DG_std, get_dist_name, print_irreps
+from DiSPy.perturb import gen_perturb
+from DiSPy.irr_mat import get_irrep_matrices
+
+parser = argparse.ArgumentParser()
+parser.add_argument("input_file")
+args = parser.parse_args()
+input_dir = args.input_file
+
+
+# -- Initialize global variables object
+io = IO(input_dir)
+#io = init.in_var(input_dir)
+
+# -- Initialize path object
+in_path = Path(io.numIm)
+
+# -- Obtain images in pymatgen structure format
+in_path.images = io.get_images()
+
+# -- Obtain elements of the DG (inputted basis)
+get_DG(in_path, io)
+
+# -- Print out DG operations in the format of Bilbao's IDENTIFY GROUP
+groupBB(in_path, io)
+
+# -- Obtain elements of the DG (std. basis)
+get_DG_std(in_path, io)
+
+# -- Obtain name of distortion group (seg. faults
+# at this point indicate tol. value is off)
+
+iso_sg_name = get_dist_name(in_path, io)
+
+# -- Print possible irreps from the listing of Stokes et al.
+print_irreps(iso_sg_name, io)
+
+
+if io.perturb:
+    # -- New path object for perturbed path
+    p_path = Path(io.numIm)
+
+    # -- Obtain irrep. matrices
+    irrep = get_irrep_matrices(in_path, io)
+
+    # -- Generate and apply perturbation to obtain new images
+    p_path.images = gen_perturb(in_path, irrep, io)
+
+    # -- Obtain elements of NEW DG (inputted basis)
+    get_DG(p_path, io)
+
+    # -- Obtain elements of the NEW DG (std. Basis)
+    get_DG_std(p_path, io)
+
+    # -- Obtain NEW distortion group name (seg. faults
+    # at this point indicate tol. value is off)
+    get_dist_name(p_path, io)
+
+    # -- Output images and generate distortion movie files
+    io.output_images(in_path, p_path)
+
+else:
+    # -- Output images and generate distortion movie files
+    io.output_images(in_path, in_path)

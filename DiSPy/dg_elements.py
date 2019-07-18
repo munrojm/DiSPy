@@ -1,139 +1,191 @@
 import spglib
 import numpy as np
-from DiSPy.vec_util import *
-from DiSPy.op_id_utils import *
-
-## -- Get the elements of the distortion group
-def get_DG(path,iv):
-
-    images = path.get_images()
-
-    numIm = len(images)
-
-    outputfile = open(iv.image_dir + "/../results/output.out", "a")
-
-    print("\n-------\n-------\n------- Symmetry of images:\n-------\n-------\n")
-    outputfile.write("\n-------\n-------\n------- Symmetry of images:\n-------\n-------\n\n")
-
-    # -- Gets symmetry data for each image
-    Dataset = []
-    for image in images:
-        image.wrap()
-        print("Image "+ str(images.index(image)+1)+": "+str(spglib.get_spacegroup(image,symprec=iv.symprec,angle_tolerance=iv.angtol)))
- 
-        outputfile.write("Image "+ str(images.index(image)+1)+": "+str(spglib.get_spacegroup(image, symprec=iv.symprec, angle_tolerance=iv.angtol)+'\n'))
-
-        Dataset.append(spglib.get_symmetry_dataset(image, symprec=iv.symprec, angle_tolerance=iv.angtol))
-
-    for i in range(0, iv.numIm):
-        for j in range(0, len(Dataset[i]['translations'])):
-            Dataset[i]['translations'][j] = standardize(Dataset[i]['translations'][j],iv.gentol)
-
-    
+import pkg_resources
 
 
-    # -- Finds H, the symmetry operations common for each image
-    # H[0] is the list of rotations, H[1] is the list of translations
-    H = []
-    H.append([])
-    H.append([])
-    rotH = Dataset[0]['rotations']
-    tranH = Dataset[0]['translations']
+from DiSPy.core.dg import DistortionGroup
+from DiSPy.core.opid import OperationIdentification
+from DiSPy.core.irreps import IrrepTools
 
-    for i in range (0,len(rotH)):
-        add = True
-        for Data in Dataset:
-            found = False
-            for j in range (0,len(Data['rotations'])):
-                if np.allclose(Data['rotations'][j],rotH[i],atol=iv.gentol,rtol=0.0) and closewrapped(Data['translations'][j],tranH[i],iv.vectol2):
-                    found = True
-                    break
-            if not found:
-                add = False
-                break
-        if add:
-            H[0].append(rotH[i])
-            H[1].append(tranH[i])
+from pymatgen.symmetry.groups import SymmOp
 
+# -- Get the elements of the distortion group
+def get_DG(path, io):
 
-    # -- Finds A*, the starred symmetry operations that map all images to their opposite image
-    # Astar[0] is the list of rotations, Astar[1] is the list of translations
-    Astar = []
-    Astar.append([])
-    Astar.append([])
-    rotA = Dataset[int(iv.numIm/2)]['rotations']
-    tranA = Dataset[int(iv.numIm/2)]['translations']
+    path.distortion_group = DistortionGroup(images=path.images, symprec=io.symprec, angle_tolerance=io.angtol,
+                                            gentol=io.gentol, vectol=io.vectol, vectol2=io.vectol2)
 
-    for i in range (0,len(rotA)):
-        add = True
-        for j in range(0,int(iv.numIm/2)):
-            positions = images[j].get_scaled_positions()
-            positions = np.dot(positions, np.transpose(rotA[i]))
-            positions = positions + findtranslation(images[int(iv.numIm/2)],rotA[i],tranA[i],iv.gentol,iv.vectol2,iv.symprec,iv.angtol)
-            
+    path.img_sym_data = path.distortion_group.get_img_sym_data(images=path.images, symprec=io.symprec,
+                                                               angle_tolerance=io.angtol, gentol=io.gentol)
 
-            newimage = images[j].copy()
-            newimage.set_scaled_positions(positions)
-            newimage.wrap()
+    io.print("\n-------\n-------\n------- Symmetry of images:\n-------\n-------\n")
 
-            if not atomsequal(newimage,images[iv.numIm-1-j],iv.vectol):
-                add = False
-                break
-        if add:
-            Astar[0].append(rotA[i])
-            Astar[1].append(tranA[i])
+    for image_num in range(io.numIm):
 
-
-    # -- Finds the general distortion group with a direct product of H and A*
-    # DG[0] is the list of rotations, DG[1] is the list of translations
-    # The first len(H[0]) operations are unstarred operations; the rest are starred.
-    DG = []
-    DG.append([])
-    DG.append([])
-    for i in range (0,len(H[0])):
-        DG[0].append(H[0][i])
-        DG[1].append(H[1][i])
-
-    for i in range (0,len(H[0])):
-        for j in range (0,len(Astar[0])):
-            add = True
-            testrot = np.dot(H[0][i],Astar[0][j])
-            testtran = standardize(np.dot(Astar[1][j],np.transpose(H[0][i]))+H[1][i],iv.gentol)
-            for k in range (len(H[0]),len(DG[0])):
-                if np.allclose(testrot,DG[0][k],atol=iv.gentol) and closewrapped(testtran,DG[1][k],iv.vectol):
-                    add = False
-                    break
-            if add:
-                DG[0].append(testrot)
-                DG[1].append(testtran)
-
-    numUstar = len(H[0])
+        io.print("Image " + str(image_num+1)+": " +
+                 str(path.img_sym_data[image_num]['international'])+' ('+str(path.img_sym_data[image_num]['number'])+')')
 
     # Output information about operations
-    print("\n-------\n------- Elements of distortion group in the basis of the inputted structures:\n-------\n")
-    outputfile.write("\n-------\n------- Elements of distortion group in the basis of the inputted structures:\n-------\n\n")
+    io.print("\n-------\n------- Elements of distortion group in the basis of the inputted structures:\n-------\n")
 
-    for i in range(0,len(DG[0])):
-        if i < numUstar:
-            print("Symmetry Element "+ str(i+1) + " (Unstarred):")
-            outputfile.write("Symmetry Element "+ str(i+1) + " (Unstarred):\n")
-        elif i >= numUstar:
-            print("Symmetry Element "+ str(i+1) + " (Starred):")
-            outputfile.write("Symmetry Element "+ str(i+1) + " (Starred):\n")
+    for i in range(len(path.distortion_group)):
+        if i < path.distortion_group.num_unstar:
+            io.print("Symmetry Element " + str(i+1) + " (Unstarred):")
 
-        op_info = operationAttributes(DG[0][i],DG[1][i],iv.gentol)
+        elif i >= path.distortion_group.num_unstar:
+            io.print("Symmetry Element " + str(i+1) + " (Starred):")
 
-        print("Rotation:")
-        print(DG[0][i])
-        print("Translation:")
-        print(DG[1][i])
-        print(op_info)
-        print("")
-        outputfile.write("Rotation:\n"+str(DG[0][i])+"\nTranslation:\n"+str(DG[1][i])+'\n'+op_info+"\n\n")
+        op_iden = OperationIdentification(
+            path.distortion_group.matrices[i], io.gentol)
+        io.print("Rotation:\n"+str(path.distortion_group.matrices[i].rotation_matrix)+"\nTranslation:\n"+str(
+            path.distortion_group.matrices[i].translation_vector)+'\n'+op_iden.info+"\n")
 
-    outputfile.close()
-    
-    path.set_DG(DG)
-    path.numUstar = numUstar
-    path.set_img_sym_data(Dataset)
+# -- Get elements of the distortion group in a standard setting.
+def get_DG_std(path, io):
+
+    images = path.images
+    DG = path.distortion_group
+    dataset = path.img_sym_data
+    num_unstar = DG.num_unstar
+
+    # -- Obtain transformation to standard basis
+    io.print(
+        "\n-------\n------- Elements of distortion group in the standard basis:\n-------\n")
+
+    if io.trnum < 0:
+        io.print("Using user inputted transformation matrix and origin shift...")
+
+    elif io.trnum == 0:
+        io.tr_mat, io.oshift = path.distortion_group.obtain_tmat(
+            images=path.images, vectol=io.vectol, symprec=io.symprec, angle_tolerance=io.angtol)
+        io.tr_mat = np.around(io.tr_mat, decimals=5)
+        io.oshift = np.around(io.oshift, decimals=5)
+    else:
+        io.tr_mat = np.around(
+            dataset[io.trnum-1]['transformation_matrix'], decimals=5)
+        io.oshift = np.around(dataset[io.trnum-1]['origin_shift'], decimals=5)
+
+        io.print(
+            "Using transformation matrix and origin shift from image "+str(io.trnum)+"...")
+
+    io.print("Transformation matrix and origin shift...\n")
+    io.print("Matrix:")
+    io.print(str(io.tr_mat))
+
+    io.print("Origin shift:")
+    io.print(str(io.oshift))
+
+    io.print("\n\n")
+
+    DG.standardize(
+        images=path.images, vectol=io.vectol, symprec=io.symprec, tmat=io.tr_mat, oshift=io.oshift)
+    for i in range(len(DG)):
+        if i < num_unstar:
+            io.print("Symmetry Element " + str(i+1) + " (Unstarred):")
+
+        elif i >= num_unstar:
+            io.print("Symmetry Element " + str(i+1) + " (Starred):")
+
+        op_iden = OperationIdentification(DG.std_matrices[i], io.gentol)
+
+        io.print("Rotation:\n"+str(np.rint(
+            DG.std_matrices[i].rotation_matrix))+"\nTranslation:\n"+ \
+        str(DG.std_matrices[i].translation_vector)+'\n'+op_iden.info+'\n')
+
+
+# Obtain the distortion group name given the elements of the standardized group
+def get_dist_name(path, io):
+
+    DG = path.distortion_group
+
+    (iso_sg_name, iso_sg_num) = DG.get_iso(io.gentol)
+    dat = _line_dat(iso_sg_num)
+    DG_std = DG.std_matrices
+
+    pos_print = []
+
+    if dat[1] == "single" and DG.num_unstar != len(DG_std):
+        _print_ds_name(["e"],iso_sg_name,io)
+        return iso_sg_name
+    else:
+        for i in range(len(DG_std)):
+
+            if i > DG.num_unstar-1:
+                op_iden = OperationIdentification(DG_std[i], io.gentol)
+                idf = op_iden.info.split()
+
+                try:
+                    mat = idf[7]+" "+idf[8]
+                except:
+                    mat = idf[7]
+
+                if "mirror" in idf:
+                    about = _to_xyz(" ".join(idf[10:13]))
+                elif "rotation" in idf or "rotoinversion" in idf:
+                    about = _to_xyz(" ".join(idf[11:14]))
+                else:
+                    about = " "
+
+                if str(_to_symbol(mat))+str(about)+" " in " ".join(dat):
+                    pos_print.append(dat[dat.index(str(_to_symbol(mat))+str(about))+1])
+
+        _print_ds_name(pos_print,iso_sg_name,io)
+
+        return iso_sg_name
+
+def print_irreps(iso_sg_name,io):
+        io.print ("\n-------\n------- Possible irreps of the distortion group:\n-------\n")
+        out_text = IrrepTools.possible_irreps(iso_sg_name)
+
+        io.print(out_text)
+
+def _print_ds_name(pos_print,iso_sg_name,io):
+    final_name = str(iso_sg_name)
+
+    p_count = 0
+
+    for i in sorted(list(set(pos_print))):
+        if i == "e":
+            final_name = final_name+"*"
+        else:
+            final_name = final_name[0:1+(int(i)+int(p_count))]+"*"+final_name[1+(int(i)+int(p_count)):]
+            p_count += 1
+
+    io.print ("\n-------\n------- Distortion group:\n-------\n")
+    io.print (final_name)
+
+# - Search SPG name dictionary
+def _line_dat(spg_num):
+    with open(pkg_resources.resource_filename('DiSPy', 'SPG_dict.txt')) as symbol_dict:
+        for line in symbol_dict:
+            l_split = line.split()
+            if l_split[0] == str(spg_num):
+                return l_split
+
+def _to_xyz(vec):
+    n = {"0 0 1":"z", \
+         "0 1 0":"y", \
+         "1 0 0":"x", \
+         "1 1 1":"xyz", \
+         "1 1-bar 0":"xby", \
+         "1 1 0":"xy",   \
+         "0 1-bar 0":"y"}
+
+    return n[str(vec)]
+
+def _to_symbol(sym):
+    n = {"twofold rotation":"2", \
+         "threefold rotation":"3", \
+         "fourfold rotation":"4", \
+         "sixfold rotation":"6", \
+         "threefold rotoinversion":"-3", \
+         "fourfold rotoinversion":"-4", \
+         "sixfold rotoinversion":"-6", \
+         "mirror across":"m",  \
+         "inversion with":"i", \
+         "inversion.":"i"}
+
+    return n[str(sym)]
+
+
 

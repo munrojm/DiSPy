@@ -1,63 +1,29 @@
 import numpy as np
-import DiSPy.irreps as irr
-
-# -- Function print possible irreps for a given DG
-def print_irreps(iso_sg, iv):
-    outputfile = open(iv.image_dir + "/../results/output.out", "a")
-
-    print ("\n-------\n------- Possible irreps of the distortion group:\n-------\n")
-    outputfile.write("\n\n-------\n------- Possible irreps of the distortion group:\n-------\n\n")
-
-    PIR = open('PIR_data.txt', "r")
-    for line in PIR:
-        if iso_sg[0:1].upper() + iso_sg[1:].lower() in line:
-            print("Irrep #" + line[1:7].strip() + ": " + line[24:32].strip())
-            outputfile.write("Irrep #" + line[1:7].strip() + ": " + line[24:32].strip()+'\n')
-    PIR.close()
+from DiSPy.core.irreps import IrrepTools
 
 # -- Function to obtain the irrep. matrices for a DG and irrep.
-def get_irreps(path, iv):
-
-    DG_std = path.get_DG_std()
-
-    outputfile = open(iv.image_dir + "/../results/output.out", "a")
-
-    print ("\n\nIrrep. #"+str(iv.irr_num)+" chosen...")
-    outputfile.write("\n\nIrrep. #"+str(iv.irr_num)+" chosen...")
-
-    if iv.irr_num != 0:
-        irreps = np.zeros((len(DG_std[0]),iv.irr_dim, iv.irr_dim))
-        kvec_z = np.zeros(3)
-        DG_std_aug = []
-
-        # -- Obtain augmented integer matrices for elements of DG in the std. basis
-        irr.pir_data_read()
-
-        for i in range(0,len(DG_std[0])):
-            mult = 1.0
-
-            while( any(np.logical_and( (mult*DG_std[1][i])%1.0 > 0.05, (mult*DG_std[1][i])%1.0 < 0.95))):
-                mult += 1.0
-
-            std_trans = mult*DG_std[1][i]
-            std_mat = DG_std[0][i]*mult
-            std_mat[0:3,3] = np.rint(std_trans)
-            std_mat = std_mat.astype(int)
 
 
-            DG_std_aug.append(std_mat)
+def get_irrep_matrices(path, io):
 
-            # -- Obtain irrep matrices
-            irreps[i,:,:]=irr.pir_data_get_irmatrix(iv.irr_num,kvec_z,std_mat,irreps[i,:,:],iv.irr_dim)
+    DG_std = path.distortion_group.std_matrices
 
+    io.print("\n\nIrrep. #"+str(io.irr_num)+" chosen...")
 
-        print("\n\n")
-        outputfile.write("\n\n")
+    if io.irr_num != 0:
+        irrep_tools = IrrepTools()
+        irrep = irrep_tools.get_irrep(group_data=DG_std, stokes_number=io.irr_num,
+                                      dimension=io.irr_dim, k_params=(None, None, None))
 
-        print ("------- Irrep. Matrices:\n")
-        outputfile.write("------- Irrep. Matrices:\n\n")
-        for j in range(0,len(irreps)):
-            print ("Symmetry Element "+str(j+1)+" : \n"+str(irreps[j])+"\n")
-            outputfile.write("Symmetry Element "+str(j+1)+" : \n"+str(irreps[j])+"\n\n")
+    else:
+        raise ValueError("No irrep chosen.")
 
-    return irreps
+    io.print("\n\n")
+
+    io.print("------- Irrep. Matrices:\n")
+
+    for j in range(0, len(irrep)):
+        irrep_matrix = irrep.irrep_matrices[j].matrix
+        io.print("Symmetry Element "+str(j+1)+" : \n"+str(irrep_matrix)+"\n")
+
+    return irrep

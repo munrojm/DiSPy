@@ -2,4 +2,4 @@ include *
 recursive-include docs * 
 recursive-include DiSPy *
 recursive-include examples *
-recursive-include bin *
+recursive-include scripts *

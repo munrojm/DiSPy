@@ -1,28 +1,29 @@
+from setuptools import setup, find_packages
 from numpy.distutils.core import setup, Extension
 
 
 extension_irr = Extension(
-    name = 'DiSPy.irreps',
-    extra_f77_compile_args=['-std=legacy'],
-    sources=['DiSPy/irreps.pyf','DiSPy/pir_dat_module.f']
+    name = 'DiSPy.core.stokes',
+    extra_f90_compile_args=['-std=legacy'],
+    sources=['DiSPy/core/stokes.pyf','DiSPy/core/pir_dat_module.f90']
 )
 
 setup(
     name='DiSPy',
-    version='0.1.1',
+    version='0.2',
     author='Jason M. Munro',
-    author_email='munrojm@psu.edu',
-    packages=['DiSPy'],
+    author_email='jmunro@lbl.gov',
+    packages=find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
     package_dir={'DiSPy': 'DiSPy'},
-    package_data={'DiSPy': ['SPG_dict.txt']},
-    scripts=['bin/dispy'],
+    package_data={'DiSPy': ['SPG_dict.txt', 'PIR_data.txt']},
+    scripts=['scripts/dispy'],
     license='LICENSE.txt',
     description='Utility to apply the distortion symmetry method.',
     long_description=open('README.rst').read(),
     provides=['dispy'],
     requires=[
         "numpy",
-        "ase",
-        "spglib"],
+        "spglib",
+        "pymatgen"],
     ext_modules=[extension_irr],
 )
