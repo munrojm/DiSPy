@@ -7,7 +7,7 @@ DiSPy is a utility for applying the distortion symmetry method (DSM) to the calc
 Prerequisites and Compilation
 =============================
 
-DiSPy is able to run with Python2 or Python3 and requires *numpy*, *spglib* and the *pymatgen (Python Materials Genomics)*. It can be manully installed by typing:
+DiSPy is able to run with Python3 and requires *numpy*, *spglib* and *pymatgen (Python Materials Genomics)*. It can be manully installed by typing:
 
 ``python setup.py install``
 
