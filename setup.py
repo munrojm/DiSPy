@@ -25,5 +25,6 @@ setup(
         "numpy",
         "spglib",
         "pymatgen"],
+    python_requires='>=3.7',
     ext_modules=[extension_irr],
 )
