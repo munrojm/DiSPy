@@ -323,7 +323,7 @@ class IO():
                         i[j] = 1.0 + i[j]
             for i in range (0,self.numIm):
                 image = begin
-                image.frac_coords = (b_pos + (i*(diff/(self.numIm-1))))
+                image._frac_coords = (b_pos + (i*(diff/(self.numIm-1))))
                 images.append(image.copy())
 
         else:
