@@ -1,4 +1,3 @@
-import spglib
 import numpy as np
 import pkg_resources
 
@@ -7,7 +6,6 @@ from DiSPy.core.dg import DistortionGroup
 from DiSPy.core.opid import OperationIdentification
 from DiSPy.core.irreps import IrrepTools
 
-from pymatgen.symmetry.groups import SymmOp
 
 # -- Get the elements of the distortion group
 def get_DG(path, io):
@@ -64,7 +62,6 @@ def get_DG(path, io):
 # -- Get elements of the distortion group in a standard setting.
 def get_DG_std(path, io):
 
-    images = path.images
     DG = path.distortion_group
     dataset = path.img_sym_data
     try:
@@ -143,7 +140,7 @@ def get_dist_name(path, io):
 
                 try:
                     mat = idf[7] + " " + idf[8]
-                except:
+                except IndexError:
                     mat = idf[7]
 
                 if "mirror" in idf:
@@ -177,7 +174,7 @@ def _print_ds_name(pos_print, iso_sg_name, io):
         if i == "e":
             final_name = final_name + "*"
         else:
-            final_name = final_name[0 : 1 + (int(i) + int(p_count))] + "*" + final_name[1 + (int(i) + int(p_count)) :]
+            final_name = final_name[0:1 + (int(i) + int(p_count))] + "*" + final_name[1 + (int(i) + int(p_count)):]
             p_count += 1
 
     io.print("\n-------\n------- Distortion group:\n-------\n")

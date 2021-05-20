@@ -1,4 +1,4 @@
-from DiSPy.core.vecutils import *
+from DiSPy.core.vecutils import atomsequal, closewrapped, findtranslation, standardize
 
 from pymatgen.symmetry.groups import SymmOp
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
@@ -49,7 +49,7 @@ class DistortionGroup(MSONable):
 
         numIm = len(images)
 
-        H = [[], []]
+        H = [[], []]  # type: List[List]
         rotH = dataset[0]["rotations"]
         tranH = dataset[0]["translations"]
 
@@ -72,7 +72,7 @@ class DistortionGroup(MSONable):
 
         # -- Finds A*, the starred symmetry operations that map all images to their opposite image
         # Astar[0] is the list of rotations, Astar[1] is the list of translations
-        Astar = [[], []]
+        Astar = [[], []]  # type: List[List]
         rotA = dataset[int(numIm / 2)]["rotations"]
         tranA = dataset[int(numIm / 2)]["translations"]
 
@@ -133,7 +133,6 @@ class DistortionGroup(MSONable):
         DG = self.matrices
 
         cp_pos = images[0].frac_coords
-        cp_lattice = images[int(numIm / 2)].lattice.matrix
         cp_labels = images[0].species
         newimage = images[int(numIm / 2)].copy()
 

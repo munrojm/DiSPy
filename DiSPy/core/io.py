@@ -69,7 +69,7 @@ class IO(MSONable):
         self.image_dir = "./"
         self.gentol = 0.001
         self.vectol = [0.001, 0.001, 0.001]
-        self.vectol2 = [-1, -1, -1]
+        self.vectol2 = [-1, -1, -1]  # type: list[float]
         self.angstrom1 = False
         self.angstrom2 = False
         self.trnum = 0
@@ -83,8 +83,8 @@ class IO(MSONable):
         self.o_format = "vasp"
         self.i_format = ""
         self.super_dim = [1.0, 1.0, 1.0]
-        self.temptol = []
-        self.temptol2 = []
+        self.temptol = []  # type: list
+        self.temptol2 = []  # type: list
         self.kwargs = kwargs
 
         # -- Attempt to set attributes with kwargs if no input file given
@@ -203,11 +203,11 @@ class IO(MSONable):
                     except:
                         self.trnum = 0
                 elif temp[:10] == "TRANS_MAT=":
-                    self.tr_mat = []
+                    self.tr_mat = []  # type: ignore
                     temp = temp[10:] + ","
                     index = temp.index(",")
                     while index != -1:
-                        self.tr_mat.append(float(temp[:index]))
+                        self.tr_mat.append(float(temp[:index]))  # type: ignore
                         temp = temp[index + 1 :]
                         try:
                             index = temp.index(",")
@@ -216,11 +216,11 @@ class IO(MSONable):
                     self.tr_mat = np.reshape(self.tr_mat, (3, 3))
 
                 elif temp[:7] == "OSHIFT=":
-                    self.oshift = []
+                    self.oshift = []  # type: ignore
                     temp = temp[7:] + ","
                     index = temp.index(",")
                     while index != -1:
-                        self.oshift.append(float(temp[:index]))
+                        self.oshift.append(float(temp[:index]))  # type: ignore
                         temp = temp[index + 1 :]
                         try:
                             index = temp.index(",")
@@ -256,7 +256,7 @@ class IO(MSONable):
                         temp = temp[11:] + ","
                         index = temp.index(",")
                         while index != -1:
-                            self.m_co.append(float(temp[:index]))
+                            self.m_co.append(float(temp[:index]))  # type: ignore
                             temp = temp[index + 1 :]
                             try:
                                 index = temp.index(",")

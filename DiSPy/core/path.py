@@ -34,14 +34,14 @@ class Path(MSONable):
     def img_sym_data(self):
         return self._img_sym_data
 
-    @distortion_group.setter
+    @distortion_group.setter  # type: ignore
     def distortion_group(self, dg):
         if not isinstance(dg, DistortionGroup):
             raise ValueError("Symmetry operations in group data must be instances of SymmOp.")
         else:
             self._distortion_group = dg
 
-    @img_sym_data.setter
+    @img_sym_data.setter  # type: ignore
     def img_sym_data(self, img_sym_data_list):
         if len(img_sym_data_list) != len(self._images):
             raise ValueError("Symmetry data list has wrong length.")
