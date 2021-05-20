@@ -19,13 +19,10 @@ input_dir = args.input_file
 
 # -- Initialize global variables object
 io = IO(input_dir)
-#io = init.in_var(input_dir)
+# io = init.in_var(input_dir)
 
-# -- Initialize path object
-in_path = Path(io.numIm)
-
-# -- Obtain images in pymatgen structure format
-in_path.images = io.get_images()
+# -- Initialize path object with images
+in_path = Path(io.get_images())
 
 # -- Obtain elements of the DG (inputted basis)
 get_DG(in_path, io)
@@ -46,14 +43,15 @@ print_irreps(iso_sg_name, io)
 
 
 if io.perturb:
-    # -- New path object for perturbed path
-    p_path = Path(io.numIm)
 
     # -- Obtain irrep. matrices
     irrep = get_irrep_matrices(in_path, io)
 
     # -- Generate and apply perturbation to obtain new images
-    p_path.images = gen_perturb(in_path, irrep, io)
+    perturbed_images = gen_perturb(in_path, irrep, io)
+
+    # -- New path object for perturbed path
+    p_path = Path(perturbed_images)
 
     # -- Obtain elements of NEW DG (inputted basis)
     get_DG(p_path, io)

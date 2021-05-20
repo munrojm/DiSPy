@@ -5,30 +5,44 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from dataclasses import dataclass
 from typing import List
+from monty.json import MSONable
 
 import spglib
 
 import numpy as np
 
 
-@dataclass
-class DistortionGroup:
+class DistortionGroup(MSONable):
+    def __init__(
+        self,
+        matrices: List,
+        num_unstar: int,
+        img_sym_dataset: List = None,
+        std_matrices: List = None,
+        trans_mat: List = None,
+        oshift: List = None,
+        symbol: str = None,
+    ):
+        self.matrices = matrices
+        self.num_unstar = num_unstar
+        self.img_sym_dataset = img_sym_dataset
+        self.std_matrices = std_matrices
+        self.trans_mat = trans_mat
+        self.oshift = oshift
+        self.symbol = symbol
 
-    matrices: List
-    std_matrices: List
-    trans_mat: List
-    oshift: List
-    label: str
-    num_unstar: int
-    img_sym_dat: List
+    @classmethod
+    def from_images(
+        cls,
+        images: List,
+        symprec: float,
+        angle_tolerance: float,
+        gentol: float,
+        vectol: List[float],
+        vectol2: List[float],
+    ):
 
-    def __init__(self, images: List, symprec: float, angle_tolerance: float, gentol: float,
-                 vectol: List[float], vectol2: List[float]):
-
-        dataset = self.get_img_sym_data(
-            images, symprec, angle_tolerance, gentol)
-
-        self.img_sym_dat = dataset
+        dataset = cls.get_img_sym_data(images, symprec, angle_tolerance, gentol)
 
         # -- Finds H, the symmetry operations common for each image
         # H[0] is the list of rotations, H[1] is the list of translations
@@ -36,15 +50,17 @@ class DistortionGroup:
         numIm = len(images)
 
         H = [[], []]
-        rotH = dataset[0]['rotations']
-        tranH = dataset[0]['translations']
+        rotH = dataset[0]["rotations"]
+        tranH = dataset[0]["translations"]
 
         for i in range(0, len(rotH)):
             add = True
             for data in dataset:
                 found = False
-                for j in range(0, len(data['rotations'])):
-                    if np.allclose(data['rotations'][j], rotH[i], atol=gentol, rtol=0.0) and closewrapped(data['translations'][j], tranH[i], vectol2):
+                for j in range(0, len(data["rotations"])):
+                    if np.allclose(data["rotations"][j], rotH[i], atol=gentol, rtol=0.0) and closewrapped(
+                        data["translations"][j], tranH[i], vectol2
+                    ):
                         found = True
                         break
                 if not found:
@@ -57,23 +73,24 @@ class DistortionGroup:
         # -- Finds A*, the starred symmetry operations that map all images to their opposite image
         # Astar[0] is the list of rotations, Astar[1] is the list of translations
         Astar = [[], []]
-        rotA = dataset[int(numIm/2)]['rotations']
-        tranA = dataset[int(numIm/2)]['translations']
+        rotA = dataset[int(numIm / 2)]["rotations"]
+        tranA = dataset[int(numIm / 2)]["translations"]
 
         for i in range(0, len(rotA)):
             add = True
-            for j in range(0, int(numIm/2)):
+            for j in range(0, int(numIm / 2)):
                 positions = images[j].frac_coords
                 positions = np.dot(positions, np.transpose(rotA[i]))
-                positions = positions + findtranslation(images[int(
-                    numIm/2)], rotA[i], tranA[i], gentol, vectol2, symprec, angle_tolerance)
+                positions = positions + findtranslation(
+                    images[int(numIm / 2)], rotA[i], tranA[i], gentol, vectol2, symprec, angle_tolerance
+                )
 
                 newimage = images[j].copy()
                 new_species = newimage.species
                 for k in range(len(new_species)):
                     newimage.replace(k, new_species[k], positions[k])
 
-                if not atomsequal(newimage, images[numIm-1-j], vectol):
+                if not atomsequal(newimage, images[numIm - 1 - j], vectol):
                     add = False
                     break
             if add:
@@ -91,19 +108,17 @@ class DistortionGroup:
             for j in range(0, len(Astar[0])):
                 add = True
                 testrot = np.dot(H[0][i], Astar[0][j])
-                testtran = standardize(
-                    np.dot(Astar[1][j], np.transpose(H[0][i]))+H[1][i], gentol)
+                testtran = standardize(np.dot(Astar[1][j], np.transpose(H[0][i])) + H[1][i], gentol)
                 for k in range(len(H[0]), len(DG)):
-                    if np.allclose(testrot, DG[k].rotation_matrix, atol=gentol) and \
-                            closewrapped(testtran, DG[k].translation_vector, vectol):
+                    if np.allclose(testrot, DG[k].rotation_matrix, atol=gentol) and closewrapped(
+                        testtran, DG[k].translation_vector, vectol
+                    ):
                         add = False
                         break
                 if add:
-                    DG.append(SymmOp.from_rotation_and_translation(
-                        testrot, testtran))
+                    DG.append(SymmOp.from_rotation_and_translation(testrot, testtran))
 
-        self.num_unstar = len(H[0])
-        self.matrices = DG
+        return cls(matrices=DG, num_unstar=len(H[0]), img_sym_dataset=dataset)
 
     def __len__(self):
         return len(self.matrices)
@@ -118,14 +133,13 @@ class DistortionGroup:
         DG = self.matrices
 
         cp_pos = images[0].frac_coords
-        cp_lattice = images[int(numIm/2)].lattice.matrix
+        cp_lattice = images[int(numIm / 2)].lattice.matrix
         cp_labels = images[0].species
-        newimage = images[int(numIm/2)].copy()
+        newimage = images[int(numIm / 2)].copy()
 
-        for i in [int(numIm/2), numIm-1]:
+        for i in [int(numIm / 2), numIm - 1]:
 
-            cp_pos = np.append(
-                cp_pos, images[i].frac_coords, axis=0)
+            cp_pos = np.append(cp_pos, images[i].frac_coords, axis=0)
             cp_labels = np.append(cp_labels, images[i].species)
 
             newimage.remove_sites(range(len(newimage.species)))
@@ -146,9 +160,8 @@ class DistortionGroup:
         for k in range(len(new_labels)):
             newimage.append(new_labels[k], new_pos[k])
 
-        dataset2 = SpacegroupAnalyzer(
-            newimage, symprec=symprec, angle_tolerance=angle_tolerance).get_symmetry_dataset()
-        return dataset2['transformation_matrix'], dataset2['origin_shift']
+        dataset2 = SpacegroupAnalyzer(newimage, symprec=symprec, angle_tolerance=angle_tolerance).get_symmetry_dataset()
+        return dataset2["transformation_matrix"], dataset2["origin_shift"]
 
     @staticmethod
     def get_img_sym_data(images, symprec, angle_tolerance, gentol):
@@ -157,13 +170,13 @@ class DistortionGroup:
         numIm = len(images)
         dataset = []
         for image in images:
-            dataset.append(SpacegroupAnalyzer(
-                image, symprec=symprec, angle_tolerance=angle_tolerance).get_symmetry_dataset())
+            dataset.append(
+                SpacegroupAnalyzer(image, symprec=symprec, angle_tolerance=angle_tolerance).get_symmetry_dataset()
+            )
 
         for i in range(0, numIm):
-            for j in range(0, len(dataset[i]['translations'])):
-                dataset[i]['translations'][j] = standardize(
-                    dataset[i]['translations'][j], gentol)
+            for j in range(0, len(dataset[i]["translations"])):
+                dataset[i]["translations"][j] = standardize(dataset[i]["translations"][j], gentol)
 
         return dataset
 
@@ -173,15 +186,15 @@ class DistortionGroup:
 
         for i in range(len(DG)):
 
-            std_mat = np.dot(
-                np.dot(tmat, DG[i].rotation_matrix), np.linalg.inv(tmat))
+            std_mat = np.dot(np.dot(tmat, DG[i].rotation_matrix), np.linalg.inv(tmat))
 
-            std_trans = np.dot(tmat, DG[i].translation_vector) + oshift - \
-                np.dot(
-                    np.dot(np.dot(tmat, DG[i].rotation_matrix), np.linalg.inv(tmat)), oshift)
+            std_trans = (
+                np.dot(tmat, DG[i].translation_vector)
+                + oshift
+                - np.dot(np.dot(np.dot(tmat, DG[i].rotation_matrix), np.linalg.inv(tmat)), oshift)
+            )
 
-            DG_std.append(
-                SymmOp.from_rotation_and_translation(std_mat, std_trans))
+            DG_std.append(SymmOp.from_rotation_and_translation(std_mat, std_trans))
 
         self.std_matrices = DG_std
         self.trans_mat = tmat
@@ -195,10 +208,11 @@ class DistortionGroup:
         mat_list = [mat.rotation_matrix for mat in DG]
         vec_list = [mat.translation_vector for mat in DG]
 
-        h_number = spglib.get_hall_number_from_symmetry(np.around(
-            mat_list, decimals=4), np.around(vec_list, decimals=6), symprec = symprec)
-        sg_type_data=spglib.get_spacegroup_type(h_number)
-        iso_sg=sg_type_data['international_short']
-        iso_sg_num=sg_type_data['number']
+        h_number = spglib.get_hall_number_from_symmetry(
+            np.around(mat_list, decimals=4), np.around(vec_list, decimals=6), symprec=symprec
+        )
+        sg_type_data = spglib.get_spacegroup_type(h_number)
+        iso_sg = sg_type_data["international_short"]
+        iso_sg_num = sg_type_data["number"]
 
         return iso_sg, iso_sg_num
