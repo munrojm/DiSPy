@@ -10,7 +10,7 @@ extension_irr = Extension(
 
 setup(
     name="DiSPy",
-    version="0.2",
+    version="0.3",
     author="Jason M. Munro",
     author_email="jmunro@lbl.gov",
     packages=find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
