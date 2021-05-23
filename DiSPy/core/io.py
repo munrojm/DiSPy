@@ -334,17 +334,6 @@ class IO(MSONable):
 
         return images
 
-    def print(self, text):
-        if not isinstance(text, str):
-            raise ValueError("Data to print must be a string")
-        else:
-            outputfile = open(self.image_dir + "/../results/output.out", "a")
-            print(text)
-            outputfile.write(text + "\n")
-            outputfile.close()
-
-    import time
-
     # -- Output function
     def output_images(self, i_path, p_path):
 
