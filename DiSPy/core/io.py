@@ -1,6 +1,5 @@
 import os
 import numpy as np
-import time
 from monty.json import MSONable
 
 from pymatgen.core.structure import Structure
