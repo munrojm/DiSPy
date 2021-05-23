@@ -289,57 +289,6 @@ class IO(MSONable):
                 self.temptol2 = self.temptol
                 self.angstrom2 = self.angstrom1
 
-            # -- Quick fix to remove .DS_Store file from MacOS
-            try:
-                os.remove(self.image_dir + "/" + ".DS_Store")
-            except:
-                pass
-
-            # -- Create and manage the results directory
-            if os.path.isdir(self.image_dir + "/../results"):
-                i = 1
-                while os.path.isdir(self.image_dir + "/../results_old_v" + str(i)):
-                    i = i + 1
-                os.rename(self.image_dir + "/../results", self.image_dir + "/../results_old_v" + str(i))
-            os.mkdir(self.image_dir + "/../results")
-
-            # -- Create output file
-            outputfile = open(self.image_dir + "/../results/output.out", "w")
-            outputfile.write(
-                """  
-    ____  _ ____  ____        
-    |  _ \(_) ___||  _ \ _   _ 
-    | | | | \___ \| |_) | | | |
-    | |_| | |___) |  __/| |_| |
-    |____/|_|____/|_|    \__, |
-                        |___/ 
-    """
-            )
-            outputfile.write("\nDiSPy v0.2 run started on " + time.strftime("%c") + "\n\n")
-            outputfile.write(
-                "This code uses the tabulation of irreducible representations \nof the crystallographic space groups by H.T. Stokes and coworkers:\n\n"
-            )
-            outputfile.write('"H.T. Stokes et. al., Acta Cryst. A. 69, 388-395 (2013)."\n\n')
-            outputfile.write("===================================================================\n")
-            outputfile.close()
-
-            print(
-                """  
-    ____  _ ____  ____        
-    |  _ \(_) ___||  _ \ _   _ 
-    | | | | \___ \| |_) | | | |
-    | |_| | |___) |  __/| |_| |
-    |____/|_|____/|_|    \__, |
-                        |___/ 
-    """
-            )
-            print("\nDiSPy v0.2 run started on " + time.strftime("%c") + "\n")
-            print(
-                "This code uses the tabulation of irreducible representations \nof the crystallographic space groups by H.T. Stokes and coworkers:\n"
-            )
-            print('"H.T. Stokes et. al., Acta Cryst. A. 69, 388-395 (2013)."\n')
-            print("===================================================================")
-
     def get_images(self):
 
         # -- Finds image files from image directory
@@ -430,15 +379,3 @@ class IO(MSONable):
 
         # os.remove(iv.image_dir + "/../results/temp")
 
-        self.print("\n\n==================================================")
-
-        self.print("\n\nTask completed on " + time.strftime("%c") + "\n\n")
-
-        self.print("If you found this program useful, please consider citing:\n")
-        self.print(
-            '"J.M. Munro et. al. Implementation of distortion symmetry for the nudged elastic band method with DiSPy. npj Comp. Mat. (2019)."\n'
-        )
-        self.print(
-            '"J.M. Munro et. al. Discovering minimum energy pathways via distortion symmetry groups. Phys. Rev. B (2018)."\n'
-        )
-        self.print('"B.K. VanLeeuwen & V. Gopalan. The antisymmetry of distortions. Nat. Commun. (2015)."\n')

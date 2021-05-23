@@ -25,8 +25,8 @@ def groupBB(path, io):
             if j != 2:
                 s += ","
         s += "%0A"
-    io.print("\n-------\n------- Symmetry operations in Bilbao IDENTIFY GROUP format:\n-------\n")
-    io.print(s.replace("%0A", "\n"))
+
+    return s.replace("%0A", "\n")
 
 
 # -- Function for printing Bilbao input in a nice way

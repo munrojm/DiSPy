@@ -16,9 +16,6 @@ def gen_perturb(path, irrep, io):
 
     irrep_tools = IrrepTools()
 
-    io.print("\n\n\n\n" + ("=" * 27 + "\n") * 2 + "\nGenerating perturbations...\n\n" + ("=" * 27 + "\n") * 2 + "\n")
-    io.print("***THE FOLLOWING DATA IS FOR THE PERTURBED IMAGES***\n\n")
-
     # -- Generate starting basis
     atoms1 = images[0].frac_coords
     numAtoms = len(atoms1)
@@ -29,15 +26,6 @@ def gen_perturb(path, irrep, io):
     for i in range(0, numAtoms):
         if not closewrapped(atoms1[i, :], atoms2[i, :], m_vec):
             basis[i] = 1
-
-    io.print("------- Atoms included in basis:")
-
-    symbols = images[0].species
-    for i in range(0, numAtoms):
-        if basis[i] == 0:
-            io.print(str(symbols[i]) + " No")
-        else:
-            io.print(str(symbols[i]) + " Yes")
 
     # -- Generate matrix showing atom mapping for each operations
     a_map = path.gen_atom_map(basis=basis, vectol=io.vectol)
@@ -82,4 +70,4 @@ def gen_perturb(path, irrep, io):
 
         images_alt.append(image_copy)
 
-    return images_alt
+    return images_alt, basis

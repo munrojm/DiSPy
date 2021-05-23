@@ -23,41 +23,6 @@ def get_DG(path, io):
         images=path.images, symprec=io.symprec, angle_tolerance=io.angtol, gentol=io.gentol
     )
 
-    io.print("\n-------\n-------\n------- Symmetry of images:\n-------\n-------\n")
-
-    for image_num in range(io.numIm):
-
-        io.print(
-            "Image "
-            + str(image_num + 1)
-            + ": "
-            + str(path.img_sym_data[image_num]["international"])
-            + " ("
-            + str(path.img_sym_data[image_num]["number"])
-            + ")"
-        )
-
-    # Output information about operations
-    io.print("\n-------\n------- Elements of distortion group in the basis of the inputted structures:\n-------\n")
-
-    for i in range(len(path.distortion_group)):
-        if i < path.distortion_group.num_unstar:
-            io.print("Symmetry Element " + str(i + 1) + " (Unstarred):")
-
-        elif i >= path.distortion_group.num_unstar:
-            io.print("Symmetry Element " + str(i + 1) + " (Starred):")
-
-        op_iden = OperationIdentification(path.distortion_group.matrices[i], io.gentol)
-        io.print(
-            "Rotation:\n"
-            + str(path.distortion_group.matrices[i].rotation_matrix)
-            + "\nTranslation:\n"
-            + str(path.distortion_group.matrices[i].translation_vector)
-            + "\n"
-            + op_iden.info
-            + "\n"
-        )
-
 
 # -- Get elements of the distortion group in a standard setting.
 def get_DG_std(path, io):
@@ -69,52 +34,19 @@ def get_DG_std(path, io):
     except AttributeError:
         raise RuntimeError("Must obtain distortion group in crystal basis before standard basis.")
 
-    # -- Obtain transformation to standard basis
-    io.print("\n-------\n------- Elements of distortion group in the standard basis:\n-------\n")
-
-    if io.trnum < 0:
-        io.print("Using user inputted transformation matrix and origin shift...")
-
-    elif io.trnum == 0:
+    if io.trnum == 0:
         io.tr_mat, io.oshift = path.distortion_group.obtain_tmat(
             images=path.images, vectol=io.vectol, symprec=io.symprec, angle_tolerance=io.angtol
         )
         io.tr_mat = np.around(io.tr_mat, decimals=5)
         io.oshift = np.around(io.oshift, decimals=5)
-    else:
+    elif io.trnum > 0:
         io.tr_mat = np.around(dataset[io.trnum - 1]["transformation_matrix"], decimals=5)
         io.oshift = np.around(dataset[io.trnum - 1]["origin_shift"], decimals=5)
 
-        io.print("Using transformation matrix and origin shift from image " + str(io.trnum) + "...")
-
-    io.print("Transformation matrix and origin shift...\n")
-    io.print("Matrix:")
-    io.print(str(io.tr_mat))
-
-    io.print("Origin shift:")
-    io.print(str(io.oshift))
-
-    io.print("\n\n")
-
     DG.standardize(images=path.images, vectol=io.vectol, symprec=io.symprec, tmat=io.tr_mat, oshift=io.oshift)
-    for i in range(len(DG)):
-        if i < num_unstar:
-            io.print("Symmetry Element " + str(i + 1) + " (Unstarred):")
 
-        elif i >= num_unstar:
-            io.print("Symmetry Element " + str(i + 1) + " (Starred):")
-
-        op_iden = OperationIdentification(DG.std_matrices[i], io.gentol)
-
-        io.print(
-            "Rotation:\n"
-            + str(np.rint(DG.std_matrices[i].rotation_matrix))
-            + "\nTranslation:\n"
-            + str(DG.std_matrices[i].translation_vector)
-            + "\n"
-            + op_iden.info
-            + "\n"
-        )
+    path.distortion_group_std = DG
 
 
 # Obtain the distortion group name given the elements of the standardized group
@@ -153,32 +85,20 @@ def get_dist_name(path, io):
                 if str(_to_symbol(mat)) + str(about) + " " in " ".join(dat):
                     pos_print.append(dat[dat.index(str(_to_symbol(mat)) + str(about)) + 1])
 
-        _print_ds_name(pos_print, iso_sg_name, io)
+        final_name = str(iso_sg_name)
 
-        return iso_sg_name
+        p_count = 0
 
+        for i in sorted(list(set(pos_print))):
+            if i == "e":
+                final_name = final_name + "*"
+            else:
+                final_name = (
+                    final_name[0 : 1 + (int(i) + int(p_count))] + "*" + final_name[1 + (int(i) + int(p_count)) :]
+                )
+                p_count += 1
 
-def print_irreps(iso_sg_name, io):
-    io.print("\n-------\n------- Possible irreps of the distortion group:\n-------\n")
-    out_text = IrrepTools.possible_irreps(iso_sg_name)
-
-    io.print(out_text)
-
-
-def _print_ds_name(pos_print, iso_sg_name, io):
-    final_name = str(iso_sg_name)
-
-    p_count = 0
-
-    for i in sorted(list(set(pos_print))):
-        if i == "e":
-            final_name = final_name + "*"
-        else:
-            final_name = final_name[0:1 + (int(i) + int(p_count))] + "*" + final_name[1 + (int(i) + int(p_count)):]
-            p_count += 1
-
-    io.print("\n-------\n------- Distortion group:\n-------\n")
-    io.print(final_name)
+        return final_name
 
 
 # - Search SPG name dictionary
