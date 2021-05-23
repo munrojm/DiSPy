@@ -9,6 +9,8 @@ from pymatgen.core.structure import Structure
 class IO(MSONable):
     def __init__(self, input_dir: str = None, **kwargs):
 
+        self.input_dir = input_dir
+
         allowed_params = [
             "perturb",
             "interpolate",
