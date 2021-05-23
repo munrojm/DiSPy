@@ -4,6 +4,7 @@ import os
 import time
 import logging
 
+from DiSPy import __version__ as version
 from DiSPy.core.io import IO
 from DiSPy.core.path import Path
 from DiSPy.core.irreps import IrrepTools
@@ -62,7 +63,7 @@ logger.info(
                         |___/ 
     """
 )
-logger.info("DiSPy v0.2 run started on " + time.strftime("%c"))
+logger.info("DiSPy v{} run started on ".format(version) + time.strftime("%c"))
 logger.info(
     "This code uses the tabulation of irreducible representations \nof the crystallographic space groups by H.T. Stokes and coworkers:\n\n"
 )
