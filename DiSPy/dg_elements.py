@@ -30,7 +30,7 @@ def get_DG_std(path, io):
     DG = path.distortion_group
     dataset = path.img_sym_data
     try:
-        num_unstar = DG.num_unstar
+        DG.num_unstar
     except AttributeError:
         raise RuntimeError("Must obtain distortion group in crystal basis before standard basis.")
 
@@ -61,8 +61,20 @@ def get_dist_name(path, io):
     pos_print = []
 
     if dat[1] == "single" and DG.num_unstar != len(DG_std):
-        _print_ds_name(["e"], iso_sg_name, io)
-        return iso_sg_name
+        final_name = str(iso_sg_name)
+
+        p_count = 0
+
+        for i in sorted(list(set(["e"]))):
+            if i == "e":
+                final_name = final_name + "*"
+            else:
+                final_name = (
+                    final_name[0 : 1 + (int(i) + int(p_count))] + "*" + final_name[1 + (int(i) + int(p_count)) :]
+                )
+                p_count += 1
+
+        return final_name
     else:
         for i in range(len(DG_std)):
 
