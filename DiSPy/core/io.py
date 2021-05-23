@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from typing import List
 from monty.json import MSONable
 
 from pymatgen.core.structure import Structure
@@ -68,7 +69,7 @@ class IO(MSONable):
         self.image_dir = "./"
         self.gentol = 0.001
         self.vectol = [0.001, 0.001, 0.001]
-        self.vectol2 = [-1, -1, -1]  # type: list[float]
+        self.vectol2 = [-1, -1, -1]  # type: List[float]
         self.angstrom1 = False
         self.angstrom2 = False
         self.trnum = 0
