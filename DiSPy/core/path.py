@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List
+from typing import Dict, List
 from monty.json import MSONable
 from pymatgen.core.structure import Structure
 from pymatgen.symmetry.groups import SymmOp
@@ -12,11 +12,12 @@ from DiSPy.core.vecutils import closewrapped
 
 
 class Path(MSONable):
-    def __init__(self, images: List[Structure]):
+    def __init__(
+        self, images: List[Structure], distortion_group: DistortionGroup = None, img_sym_data: List[Dict] = None
+    ):
 
         self._images = images
         self._distortion_group = None
-        self._distortion_group_std = None
         self._img_sym_data = None
 
     def __len__(self):
