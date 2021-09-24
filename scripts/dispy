@@ -21,7 +21,7 @@ args = parser.parse_args()
 input_file = os.path.abspath(args.input_file)
 input_dir = os.path.dirname(input_file)
 
-print(input_dir)
+
 # -- Initialize global variables object
 io = IO(input_file)
 
@@ -82,7 +82,7 @@ logger.info("\n-------\n-------\n------- Symmetry of images:\n-------\n-------\n
 # Output image info
 for image_num in range(len(in_path)):
 
-    io.print(
+    logger.info(
         "Image "
         + str(image_num + 1)
         + ": "
