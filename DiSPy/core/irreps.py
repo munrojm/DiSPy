@@ -129,13 +129,12 @@ class IrrepTools:
         """
 
         PIR = open(pkg_resources.resource_filename("DiSPy", "PIR_data.txt"), "r")
-        formatted_iso_sg = iso_sg.strip("*")
+        formatted_iso_sg = iso_sg.replace("*", "")
         out_str = ""
         for line in PIR:
             if formatted_iso_sg[0:1].upper() + formatted_iso_sg[1:].lower() in line:
                 out_str = out_str + "Irrep #" + line[1:7].strip() + ": " + line[24:32].strip() + "\n"
         PIR.close()
-
         return out_str
 
     def projection_diag(
