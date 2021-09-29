@@ -36,6 +36,12 @@ def gen_perturb(path, irrep, io):
     pt_mode_init = irrep_tools.projection_diag(
         images=images, symmop_list=DG, irrep=irrep, num_unstar=num_unstar, a_map=a_map, basis=basis
     )
+
+    if not np.any(pt_mode_init):
+        raise RuntimeError(
+            f"Uniform random initial perturbation does not contain any non-zero contributions from irrep {irrep.stokes_number}.\
+ Try a different irrep."
+        )
     pt_mode_init = pt_mode_init / np.linalg.norm(np.ndarray.flatten(pt_mode_init))
 
     pt += io.m_co[0] * pt_mode_init
