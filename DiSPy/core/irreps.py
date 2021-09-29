@@ -178,23 +178,11 @@ class IrrepTools:
                         temp_mode = np.zeros((1, numIm, numAtoms, 3))
                         for l in range(len(symmop_list)):
 
-                            # t_coord = np.dot(DG[0][l],atoms1[j])
-                            # t_coord = (t_coord + DG[1][l])%1.0
-
                             if l < num_unstar:
-                                # atoms2 = images[i].get_scaled_positions()
-                                # num2 = images[i].get_atomic_numbers()
                                 t_im = i
                             else:
-                                # atoms2 = images[numIm-1-i].get_scaled_positions()
-                                # num2 = images[numIm-1-i].get_atomic_numbers()
                                 t_im = numIm - 1 - i
 
-                            # for k in range(0,numAtoms):
-                            # if (closewrapped (t_coord,atoms2[k],vectol) and \
-                            # num1[j] == num2[k] and basis[j] == 1):
-
-                            # was in commented for-loop above
                             temp_mode[0, t_im, np.nonzero(a_map[l, t_im, j, :])[0][0], :] += (  # type: ignore
                                 irrep_matrices[l].matrix[0, 0] * symmop_list[l].rotation_matrix[:, m]
                             )
@@ -212,6 +200,7 @@ class IrrepTools:
         #     for i in range(0, len(vec_list[:, 0, 0, 0])):
         #         mode += random.uniform(-1.0, 1.0)*vec_list[i, :, :, :]
         # else:
+
         mode = np.sum(vec_list, axis=0)  # type: ignore
 
         return mode
@@ -261,21 +250,10 @@ class IrrepTools:
                         temp_mode = np.zeros((1, numIm, numAtoms, 3))
                         for l in range(0, len(symmop_list)):
 
-                            # t_coord = np.dot(DG[0][l],atoms1[j])
-                            # t_coord = (t_coord + DG[1][l])%1.0
-
                             if l < num_unstar:
-                                # atoms2 = images[i].get_scaled_positions()
-                                # num2 = images[i].get_atomic_numbers()
                                 t_im = i
                             else:
-                                # atoms2 = images[numIm-1-i].get_scaled_positions()
-                                # num2 = images[numIm-1-i].get_atomic_numbers()
                                 t_im = numIm - 1 - i
-
-                            # for k in range(0,numAtoms):
-                            # if (closewrapped (t_coord,atoms2[k],vectol) and \
-                            # num1[j] == num2[k] and basis[j] == 1):
 
                             n_coord = np.dot(symmop_list[l].rotation_matrix, vec[i, j, :])  # type: ignore
 
