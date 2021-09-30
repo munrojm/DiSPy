@@ -1,69 +1,289 @@
 #!/usr/bin/env python
 import argparse
-import numpy as np
+import os
+import time
+import logging
 
+from DiSPy import __version__ as version
 from DiSPy.core.io import IO
 from DiSPy.core.path import Path
 from DiSPy.core.irreps import IrrepTools
+from DiSPy.core.opid import OperationIdentification
 
 from DiSPy.bilbao import groupBB
-from DiSPy.dg_elements import get_DG, get_DG_std, get_dist_name, print_irreps
+from DiSPy.dg_elements import get_DG, get_DG_std, get_dist_name
 from DiSPy.perturb import gen_perturb
 from DiSPy.irr_mat import get_irrep_matrices
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input_file")
 args = parser.parse_args()
-input_dir = args.input_file
+input_file = os.path.abspath(args.input_file)
+input_dir = os.path.dirname(input_file)
 
 
 # -- Initialize global variables object
-io = IO(input_dir)
-#io = init.in_var(input_dir)
+io = IO(input_file)
 
-# -- Initialize path object
-in_path = Path(io.numIm)
+# -- Quick fix to remove .DS_Store file from MacOS
+try:
+    os.remove(input_dir + "/" + ".DS_Store")
+except FileNotFoundError:
+    pass
 
-# -- Obtain images in pymatgen structure format
-in_path.images = io.get_images()
+# -- Create and manage the results directory
+if os.path.isdir(input_dir + "/results"):
+    i = 1
+    while os.path.isdir(input_dir + "/results_old_v" + str(i)):
+        i = i + 1
+    os.rename(input_dir + "/results", input_dir + "/results_old_v" + str(i))
+
+os.mkdir(input_dir + "/results")
+
+# -- Setup logging
+logger = logging.getLogger("dispy")
+logger.setLevel(logging.DEBUG)
+
+ch = logging.StreamHandler()
+ch.setLevel(logging.INFO)
+
+fh = logging.FileHandler(input_dir + "/results/output.out")
+fh.setLevel(logging.INFO)
+
+logger.addHandler(ch)
+logger.addHandler(fh)
+
+logger.info(
+    """  
+    ____  _ ____  ____        
+    |  _ \(_) ___||  _ \ _   _ 
+    | | | | \___ \| |_) | | | |
+    | |_| | |___) |  __/| |_| |
+    |____/|_|____/|_|    \__, |
+                        |___/ 
+    """
+)
+logger.info("DiSPy v{} run started on ".format(version) + time.strftime("%c"))
+logger.info(
+    "This code uses the tabulation of irreducible representations \nof the crystallographic space groups by H.T. Stokes and coworkers:\n\n"
+)
+logger.info("H.T. Stokes et. al., Acta Cryst. A. 69, 388-395 (2013).")
+logger.info("===================================================================")
+
+
+# -- Initialize path object with images
+in_path = Path(io.get_images())
 
 # -- Obtain elements of the DG (inputted basis)
 get_DG(in_path, io)
 
+logger.info("\n-------\n-------\n------- Symmetry of images:\n-------\n-------\n")
+
+# Output image info
+for image_num in range(len(in_path)):
+
+    logger.info(
+        "Image "
+        + str(image_num + 1)
+        + ": "
+        + str(in_path.img_sym_data[image_num]["international"])
+        + " ("
+        + str(in_path.img_sym_data[image_num]["number"])
+        + ")"
+    )
+
+# Output information about operations
+logger.info("\n-------\n------- Elements of distortion group in the basis of the input structures:\n-------\n")
+
+for i in range(len(in_path.distortion_group)):
+    if i < in_path.distortion_group.num_unstar:
+        logger.info("Symmetry Element " + str(i + 1) + " (Unstarred):")
+
+    elif i >= in_path.distortion_group.num_unstar:
+        logger.info("Symmetry Element " + str(i + 1) + " (Starred):")
+
+    op_iden = OperationIdentification(in_path.distortion_group.matrices[i], io.gentol)
+    logger.info(
+        "Rotation:\n"
+        + str(in_path.distortion_group.matrices[i].rotation_matrix)
+        + "\nTranslation:\n"
+        + str(in_path.distortion_group.matrices[i].translation_vector)
+        + "\n"
+        + op_iden.info
+        + "\n"
+    )
+
 # -- Print out DG operations in the format of Bilbao's IDENTIFY GROUP
-groupBB(in_path, io)
+formatted_text = groupBB(in_path, io)
+
+logger.info("\n-------\n------- Symmetry operations in Bilbao IDENTIFY GROUP format:\n-------\n")
+logger.info(formatted_text)
 
 # -- Obtain elements of the DG (std. basis)
 get_DG_std(in_path, io)
+
+# Output information about operations
+logger.info("\n-------\n------- Elements of distortion group in the standard basis:\n-------\n")
+
+if io.trnum < 0:
+    logger.info("Using user inputted transformation matrix and origin shift...")
+elif io.trnum > 0:
+    logger.info("Using transformation matrix and origin shift from image " + str(io.trnum) + "...")
+
+logger.info("Transformation matrix and origin shift...\n")
+logger.info("Matrix:")
+logger.info(str(io.tr_mat))
+
+logger.info("Origin shift:")
+logger.info(str(io.oshift))
+
+logger.info("\n\n")
+
+for i in range(len(in_path.distortion_group)):
+    if i < in_path.distortion_group.num_unstar:
+        logger.info("Symmetry Element " + str(i + 1) + " (Unstarred):")
+
+    elif i >= in_path.distortion_group.num_unstar:
+        logger.info("Symmetry Element " + str(i + 1) + " (Starred):")
+
+    op_iden = OperationIdentification(in_path.distortion_group.std_matrices[i], io.gentol)
+    logger.info(
+        "Rotation:\n"
+        + str(in_path.distortion_group.std_matrices[i].rotation_matrix)
+        + "\nTranslation:\n"
+        + str(in_path.distortion_group.std_matrices[i].translation_vector)
+        + "\n"
+        + op_iden.info
+        + "\n"
+    )
 
 # -- Obtain name of distortion group (seg. faults
 # at this point indicate tol. value is off)
 
 iso_sg_name = get_dist_name(in_path, io)
 
-# -- Print possible irreps from the listing of Stokes et al.
-print_irreps(iso_sg_name, io)
+logger.info("\n-------\n------- Distortion group:\n-------\n")
+logger.info(iso_sg_name)
+
+# # -- Print possible irreps from the listing of Stokes et al.
+logger.info("\n-------\n------- Possible irreps of the distortion group:\n-------\n")
+out_text = IrrepTools.possible_irreps(iso_sg_name)
+
+logger.info(out_text)
 
 
 if io.perturb:
-    # -- New path object for perturbed path
-    p_path = Path(io.numIm)
 
     # -- Obtain irrep. matrices
+    logger.info("\n\nIrrep. #" + str(io.irr_num) + " chosen...\n\n")
+
     irrep = get_irrep_matrices(in_path, io)
 
+    logger.info("------- Irrep. Matrices:\n")
+
+    for j in range(len(irrep)):
+        irrep_matrix = irrep.irrep_matrices[j].matrix
+        logger.info("Symmetry Element " + str(j + 1) + " : \n" + str(irrep_matrix) + "\n")
+
     # -- Generate and apply perturbation to obtain new images
-    p_path.images = gen_perturb(in_path, irrep, io)
+    logger.info("\n\n\n\n" + ("=" * 27 + "\n") * 2 + "\nGenerating perturbations...\n\n" + ("=" * 27 + "\n") * 2 + "\n")
+    logger.info("***THE FOLLOWING DATA IS FOR THE PERTURBED IMAGES***\n\n")
+
+    perturbed_images, basis = gen_perturb(in_path, irrep, io)
+
+    logger.info("------- Atoms included in basis:")
+    symbols = in_path.images[0].species
+    for i in range(len(in_path.images[0].frac_coords)):
+        if basis[i] == 0:
+            logger.info(str(symbols[i]) + " No")
+        else:
+            logger.info(str(symbols[i]) + " Yes")
+
+    # -- New path object for perturbed path
+    p_path = Path(perturbed_images)
 
     # -- Obtain elements of NEW DG (inputted basis)
     get_DG(p_path, io)
 
+    logger.info("\n-------\n-------\n------- Symmetry of images:\n-------\n-------\n")
+
+    # Output image info
+    for image_num in range(len(p_path)):
+
+        logger.info(
+            "Image "
+            + str(image_num + 1)
+            + ": "
+            + str(p_path.img_sym_data[image_num]["international"])
+            + " ("
+            + str(p_path.img_sym_data[image_num]["number"])
+            + ")"
+        )
+
+    # Output information about operations
+    logger.info("\n-------\n------- Elements of distortion group in the basis of the inputted structures:\n-------\n")
+
+    for i in range(len(p_path.distortion_group)):
+        if i < p_path.distortion_group.num_unstar:
+            logger.info("Symmetry Element " + str(i + 1) + " (Unstarred):")
+
+        elif i >= p_path.distortion_group.num_unstar:
+            logger.info("Symmetry Element " + str(i + 1) + " (Starred):")
+
+        op_iden = OperationIdentification(p_path.distortion_group.matrices[i], io.gentol)
+        logger.info(
+            "Rotation:\n"
+            + str(p_path.distortion_group.matrices[i].rotation_matrix)
+            + "\nTranslation:\n"
+            + str(p_path.distortion_group.matrices[i].translation_vector)
+            + "\n"
+            + op_iden.info
+            + "\n"
+        )
+
     # -- Obtain elements of the NEW DG (std. Basis)
     get_DG_std(p_path, io)
 
+    logger.info("\n-------\n------- Elements of distortion group in the standard basis:\n-------\n")
+
+    if io.trnum < 0:
+        logger.info("Using user inputted transformation matrix and origin shift...")
+    elif io.trnum > 0:
+        logger.info("Using transformation matrix and origin shift from image " + str(io.trnum) + "...")
+
+    logger.info("Transformation matrix and origin shift...\n")
+    logger.info("Matrix:")
+    logger.info(str(io.tr_mat))
+
+    logger.info("Origin shift:")
+    logger.info(str(io.oshift))
+
+    logger.info("\n\n")
+
+    for i in range(len(p_path.distortion_group)):
+        if i < p_path.distortion_group.num_unstar:
+            logger.info("Symmetry Element " + str(i + 1) + " (Unstarred):")
+
+        elif i >= p_path.distortion_group.num_unstar:
+            logger.info("Symmetry Element " + str(i + 1) + " (Starred):")
+
+        op_iden = OperationIdentification(p_path.distortion_group.std_matrices[i], io.gentol)
+        logger.info(
+            "Rotation:\n"
+            + str(p_path.distortion_group.std_matrices[i].rotation_matrix)
+            + "\nTranslation:\n"
+            + str(p_path.distortion_group.std_matrices[i].translation_vector)
+            + "\n"
+            + op_iden.info
+            + "\n"
+        )
+
     # -- Obtain NEW distortion group name (seg. faults
     # at this point indicate tol. value is off)
-    get_dist_name(p_path, io)
+    iso_sg_name = get_dist_name(p_path, io)
+
+    logger.info("\n-------\n------- Distortion group:\n-------\n")
+    logger.info(iso_sg_name)
 
     # -- Output images and generate distortion movie files
     io.output_images(in_path, p_path)
@@ -71,3 +291,17 @@ if io.perturb:
 else:
     # -- Output images and generate distortion movie files
     io.output_images(in_path, in_path)
+
+logger.info("\n\n==================================================")
+
+logger.info("\n\nTask completed on " + time.strftime("%c") + "\n\n")
+
+logger.info("If you found this program useful, please consider citing:\n")
+logger.info(
+    '"J.M. Munro et. al. Implementation of distortion symmetry for the nudged elastic band method with DiSPy. npj Comp. Mat. (2019)."\n'
+)
+logger.info(
+    '"J.M. Munro et. al. Discovering minimum energy pathways via distortion symmetry groups. Phys. Rev. B (2018)."\n'
+)
+logger.info('"B.K. VanLeeuwen & V. Gopalan. The antisymmetry of distortions. Nat. Commun. (2015)."\n')
+

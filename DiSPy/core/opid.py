@@ -2,7 +2,6 @@ import numpy as np
 
 
 class OperationIdentification:
-
     def __init__(self, symmop, gentol):
         rot = symmop.rotation_matrix
         tran = symmop.translation_vector
@@ -57,8 +56,7 @@ class OperationIdentification:
             vec = np.around(np.dot(vec, 4))
             isInt = True
         else:
-            vec = np.dot(
-                vec, 1 / np.sqrt(np.square(vec[0]) + np.square(vec[1]) + np.square(vec[2])))
+            vec = np.dot(vec, 1 / np.sqrt(np.square(vec[0]) + np.square(vec[1]) + np.square(vec[2])))
         vectext = ""
         if isInt:
             for element in vec:
@@ -110,8 +108,7 @@ class OperationIdentification:
             if det == 1:
                 result += "a translation of " + str(moved) + "."
             else:
-                result += "an inversion with a translation of " + \
-                    str(tran) + " but no intrinsic translation component."
+                result += "an inversion with a translation of " + str(tran) + " but no intrinsic translation component."
         else:
             if type == 2 and det == -1:
                 result += "a mirror across the "
