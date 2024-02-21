@@ -21,7 +21,7 @@ setup(
     description="Utility to apply the distortion symmetry method.",
     long_description=open("README.rst").read(),
     provides=["dispy"],
-    install_requires=["pymatgen==2022.0.8"],
+    install_requires=["pymatgen==2024.2.20"],
     python_requires=">=3.8",
     ext_modules=[extension_irr],
 )
